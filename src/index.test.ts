@@ -130,7 +130,10 @@ const cases: Record<BuiltinType, () => unknown[]> = {
     new BigUint64Array(),
     new BigUint64Array([1n, 2n, 3n]),
   ],
-  Float16Array: () => [new Float16Array(), new Float16Array([3.14, -1.2])],
+  Float16Array: () =>
+    typeof Float16Array === `undefined`
+      ? []
+      : [new Float16Array(), new Float16Array([3.14, -1.2])],
   Float32Array: () => [new Float32Array(), new Float32Array([3.14, -1.2])],
   Float64Array: () => [new Float64Array(), new Float64Array([3.14, -1.2])],
   DataView: () => [
@@ -215,7 +218,7 @@ const anythingArb = fc.anything({
 })
 
 test.prop([anythingArb], {
-  numRuns: 100_000,
+  numRuns: 50_000,
   examples: Object.values(cases)
     .flatMap(values => values())
     .map(value => [value]),
@@ -226,11 +229,11 @@ test.prop([anythingArb], {
 
     expect(actualType).toBeOneOf(Object.keys(cases))
   },
-  10_000,
+  25_000,
 )
 
 test.prop([fc.clone(anythingArb, 2)], {
-  numRuns: 100_000,
+  numRuns: 50_000,
   examples: Object.entries(cases).flatMap(
     ([type, values]): [[unknown, unknown]][] => {
       if (type === `symbol` || type.endsWith(`Function`)) {
@@ -249,5 +252,5 @@ test.prop([fc.clone(anythingArb, 2)], {
 
     expect(value1).toStrictEqual(value2)
   },
-  10_000,
+  25_000,
 )

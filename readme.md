@@ -21,16 +21,30 @@
 </div>
 
 <div align="center">
-  An unreal module.
+  What is the type of this builtin JS value?
 </div>
 
 ## Features
 
-- **Wow:** so amazing
-- **Amazing:** so wow
-- **Fancy:** has a tie and everything
+- **Comprehensive:** Supports a ton of builtin types
+- **Robust:** Works
+  [cross-realm](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_realms)
+- **Secure:** Resilient to spoofing
+- **Tiny:** One 650 B gzipped package instead of
+  [`which-builtin-type`'s 10.5 kB gzipped package](https://bundlejs.com/?q=which-builtin-type%401.2.1)
+  with [50 dependencies](https://npmgraph.js.org/?q=which-builtin-type#zoom=w)
 
 ## Install
+
+> [!NOTE]
+>
+> Determining the builtin type in a way that works cross-realm and is resilient
+> to spoofing is significantly slower than plain
+> [`instanceof`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof)
+> or
+> [`Object.prototype.toString.call(...)`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString#using_tostring_to_detect_object_class).
+> If you don't need those guarantees, then just use these simpler options
+> directly.
 
 ```sh
 $ npm i builtin-type
@@ -38,11 +52,70 @@ $ npm i builtin-type
 
 ## Usage
 
+<!-- eslint-disable require-unicode-regexp, prefer-regex-literals, no-new-wrappers, unicorn/new-for-builtins, symbol-description -->
+
 ```js
+import assert from 'node:assert'
 import builtinType from 'builtin-type'
 
-console.log(builtinType())
-//=> Hello World!
+assert.equal(builtinType(undefined), `undefined`)
+assert.equal(builtinType(null), `null`)
+assert.equal(builtinType(false), `boolean`)
+assert.equal(builtinType(42), `number`)
+assert.equal(builtinType(42n), `bigint`)
+assert.equal(builtinType(`foo`), `string`)
+assert.equal(builtinType(Symbol()), `symbol`)
+assert.equal(builtinType(new Boolean(false)), `Boolean`)
+assert.equal(builtinType(new Number(42)), `Number`)
+assert.equal(builtinType(new String(`foo`)), `String`)
+assert.equal(builtinType([]), `Array`)
+assert.equal(builtinType(new Map()), `Map`)
+assert.equal(builtinType(new Set()), `Set`)
+assert.equal(builtinType(new WeakMap()), `WeakMap`)
+assert.equal(builtinType(new WeakSet()), `WeakSet`)
+assert.equal(
+  builtinType(() => {}),
+  `Function`,
+)
+assert.equal(
+  builtinType(function* () {}),
+  `GeneratorFunction`,
+)
+assert.equal(
+  builtinType(async () => {}),
+  `AsyncFunction`,
+)
+assert.equal(
+  builtinType(async function* () {}),
+  `AsyncGeneratorFunction`,
+)
+assert.equal(builtinType(Promise.resolve()), `Promise`)
+assert.equal(builtinType(new Date()), `Date`)
+assert.equal(builtinType(/a/g), `RegExp`)
+assert.equal(builtinType(new URL(`https://example.com/`)), `URL`)
+assert.equal(builtinType(new URLSearchParams()), `URLSearchParams`)
+assert.equal(builtinType(new WeakRef({})), `WeakRef`)
+assert.equal(
+  builtinType(new FinalizationRegistry(() => {})),
+  `FinalizationRegistry`,
+)
+assert.equal(builtinType(new ArrayBuffer()), `ArrayBuffer`)
+assert.equal(builtinType(new SharedArrayBuffer()), `SharedArrayBuffer`)
+assert.equal(builtinType(Buffer.from([])), `Buffer`)
+assert.equal(builtinType(new Int8Array()), `Int8Array`)
+assert.equal(builtinType(new Uint8Array()), `Uint8Array`)
+assert.equal(builtinType(new Uint8ClampedArray()), `Uint8ClampedArray`)
+assert.equal(builtinType(new Int16Array()), `Int16Array`)
+assert.equal(builtinType(new Uint16Array()), `Uint16Array`)
+assert.equal(builtinType(new Int32Array()), `Int32Array`)
+assert.equal(builtinType(new Uint32Array()), `Uint32Array`)
+assert.equal(builtinType(new BigInt64Array()), `BigInt64Array`)
+assert.equal(builtinType(new BigUint64Array()), `BigUint64Array`)
+assert.equal(builtinType(new Float16Array()), `Float16Array`)
+assert.equal(builtinType(new Float32Array()), `Float32Array`)
+assert.equal(builtinType(new Float64Array()), `Float64Array`)
+assert.equal(builtinType(new DataView(new ArrayBuffer())), `DataView`)
+assert.equal(builtinType({}), `Object`)
 ```
 
 ## Contributing

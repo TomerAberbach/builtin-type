@@ -118,6 +118,24 @@ assert.equal(builtinType(new DataView(new ArrayBuffer())), `DataView`)
 assert.equal(builtinType({}), `Object`)
 ```
 
+## Benchmarks
+
+`builtin-type` is at least as fast as
+[`which-builtin-type`](https://www.npmjs.com/package/which-builtin-type). It may
+be slightly faster, but that could just be noise in the benchmarks.
+
+Here's an example `pnpm bench` run:
+
+```
+ ✓ src/index.bench.ts 3333ms
+     name                   hz      min      max     mean      p75      p99     p995     p999     rme  samples
+   · whichBuiltinType  66.9824  14.6727  15.4056  14.9293  15.0297  15.4056  15.4056  15.4056  ±0.43%       34
+   · builtinType       71.4251  13.7500  14.6090  14.0007  14.0046  14.6090  14.6090  14.6090  ±0.41%       36
+
+  builtinType - src/index.bench.ts
+    1.07x faster than whichBuiltinType
+```
+
 ## Contributing
 
 Stars are always welcome!

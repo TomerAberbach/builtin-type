@@ -144,13 +144,6 @@ const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
         ...args: any[]
       ) => any
       return value => {
-        if ((value as { prototype: unknown }).prototype === prototype) {
-          // Fast path.
-          return type
-        }
-
-        // Slow path.
-        //
         // Each function above will do one of the following when applied to a
         // value not of the proper type:
         // 1. Throw

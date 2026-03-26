@@ -58,6 +58,7 @@
     "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^9.39.2",
     "jsdom": "^29.0.1",
+    "magic-string": "^0.30.21",
     "prettier": "^3.8.1",
     "publint": "^0.3.18",
     "tsdown": "^0.21.4",

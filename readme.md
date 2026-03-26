@@ -30,7 +30,7 @@
 - **Robust:** Works
   [cross-realm](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_realms)
 - **Secure:** Resilient to spoofing
-- **Tiny:** One 650 B gzipped package instead of
+- **Tiny:** One 635 B gzipped package instead of
   [`which-builtin-type`'s 10.5 kB gzipped total size](https://bundlejs.com/?q=which-builtin-type%401.2.1)
   with [50 dependencies](https://npmgraph.js.org/?q=which-builtin-type#zoom=w)
 
@@ -124,7 +124,7 @@ assert.equal(builtinType({}), `Object`)
 [`which-builtin-type`](https://www.npmjs.com/package/which-builtin-type). It may
 be slightly faster, but that could just be noise in the benchmarks.
 
-Here's an example `pnpm bench` run:
+Here's an example run of [the benchmark](./src/index.bench.ts):
 
 ```
  ✓ src/index.bench.ts 3333ms

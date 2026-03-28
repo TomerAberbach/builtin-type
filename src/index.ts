@@ -50,6 +50,15 @@ export type BuiltinType =
   | `Float32Array`
   | `Float64Array`
   | `DataView`
+  // Temporal
+  | `Temporal.Duration`
+  | `Temporal.Instant`
+  | `Temporal.PlainDate`
+  | `Temporal.PlainDateTime`
+  | `Temporal.PlainMonthDay`
+  | `Temporal.PlainTime`
+  | `Temporal.PlainYearMonth`
+  | `Temporal.ZonedDateTime`
   // Catch-all
   | `Object`
 
@@ -103,6 +112,14 @@ const INTERNAL_SLOT_PROTOTYPE_NAMES: [BuiltinType, string, any[]?][] = [
   [`SharedArrayBuffer`, `byteLength`],
   [`DataView`, `buffer`],
   [`FinalizationRegistry`, `unregister`, [{}]],
+  [`Temporal.ZonedDateTime`, `timeZoneId`],
+  [`Temporal.Instant`, `epochNanoseconds`],
+  [`Temporal.PlainDateTime`, `year`],
+  [`Temporal.PlainDate`, `year`],
+  [`Temporal.PlainTime`, `hour`],
+  [`Temporal.PlainYearMonth`, `year`],
+  [`Temporal.PlainMonthDay`, `monthCode`],
+  [`Temporal.Duration`, `sign`],
 ]
 
 type BuiltinTypeFunction = (value: object) => BuiltinType | undefined
@@ -121,12 +138,17 @@ const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
   ...INTERNAL_SLOT_PROTOTYPE_NAMES.flatMap<BuiltinTypeFunction>(
     ([type, name, args = []]) => {
       let prototype: object | undefined | null = (
-        globalThis[type as keyof typeof globalThis] as
-          | {
-              prototype: object
-            }
-          | undefined
+        type
+          .split(`.`)
+          .reduce<unknown>(
+            (value, key) =>
+              (value as Record<string, unknown> | undefined)?.[key],
+            globalThis,
+          ) as { prototype: object } | undefined
       )?.prototype
+      if (!prototype) {
+        return []
+      }
       let descriptor: PropertyDescriptor | undefined
       do {
         descriptor = Object.getOwnPropertyDescriptor(prototype, name)

@@ -29,6 +29,7 @@ const fromDifferentRealm = (values: () => unknown[]): unknown[] =>
     URL,
     URLSearchParams,
     Buffer,
+    Temporal,
   }) as unknown[]
 
 const isObject = (value: unknown): value is object =>
@@ -140,6 +141,40 @@ const cases: Record<BuiltinType, () => unknown[]> = {
     new DataView(new ArrayBuffer()),
     new DataView(new ArrayBuffer(10)),
   ],
+  'Temporal.Duration': () => [
+    new Temporal.Duration(),
+    new Temporal.Duration(1, 2, 3),
+    Temporal.Duration.from({ hours: 1 }),
+  ],
+  'Temporal.Instant': () => [
+    Temporal.Instant.fromEpochMilliseconds(0),
+    Temporal.Instant.fromEpochMilliseconds(Date.now()),
+  ],
+  'Temporal.PlainDate': () => [
+    new Temporal.PlainDate(2024, 1, 15),
+    Temporal.PlainDate.from(`2024-01-15`),
+  ],
+  'Temporal.PlainDateTime': () => [
+    new Temporal.PlainDateTime(2024, 1, 15, 12),
+    Temporal.PlainDateTime.from(`2024-01-15T12:00:00`),
+  ],
+  'Temporal.PlainMonthDay': () => [
+    new Temporal.PlainMonthDay(1, 15),
+    Temporal.PlainMonthDay.from(`01-15`),
+  ],
+  'Temporal.PlainTime': () => [
+    new Temporal.PlainTime(),
+    new Temporal.PlainTime(12),
+    Temporal.PlainTime.from(`12:00:00`),
+  ],
+  'Temporal.PlainYearMonth': () => [
+    new Temporal.PlainYearMonth(2024, 1),
+    Temporal.PlainYearMonth.from(`2024-01`),
+  ],
+  'Temporal.ZonedDateTime': () => [
+    new Temporal.ZonedDateTime(0n, `UTC`),
+    Temporal.ZonedDateTime.from(`2024-01-15T12:00:00+00:00[UTC]`),
+  ],
   Object: (): unknown[] => [{}, Object.create(null)],
 }
 
@@ -199,6 +234,14 @@ const EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES = new Map<string, string>([
   [`arraybuffer`, `lies!`],
   [`sharedarraybuffer`, `lies!`],
   [`dataview`, `lies!`],
+  [`temporal.duration`, `lies!`],
+  [`temporal.instant`, `lies!`],
+  [`temporal.plaindate`, `lies!`],
+  [`temporal.plaindatetime`, `lies!`],
+  [`temporal.plainmonthday`, `lies!`],
+  [`temporal.plaintime`, `lies!`],
+  [`temporal.plainyearmonth`, `lies!`],
+  [`temporal.zoneddatetime`, `lies!`],
   [`object`, `lies!`],
 
   // `which-builtin-type` seems to mishandle `Buffer`.

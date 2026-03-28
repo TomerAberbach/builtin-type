@@ -30,7 +30,7 @@
 - **Robust:** Works
   [cross-realm](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_realms)
 - **Secure:** Resilient to spoofing
-- **Tiny:** One 0.64 kB gzipped package instead of
+- **Tiny:** One 0.76 kB gzipped package instead of
   [`which-builtin-type`'s 10.5 kB gzipped total size](https://bundlejs.com/?q=which-builtin-type%401.2.1)
   with [50 dependencies](https://npmgraph.js.org/?q=which-builtin-type#zoom=w)
 
@@ -115,6 +115,32 @@ assert.equal(builtinType(new Float16Array()), `Float16Array`)
 assert.equal(builtinType(new Float32Array()), `Float32Array`)
 assert.equal(builtinType(new Float64Array()), `Float64Array`)
 assert.equal(builtinType(new DataView(new ArrayBuffer())), `DataView`)
+assert.equal(builtinType(new Temporal.Duration()), `Temporal.Duration`)
+assert.equal(
+  builtinType(Temporal.Instant.fromEpochMilliseconds(0)),
+  `Temporal.Instant`,
+)
+assert.equal(
+  builtinType(new Temporal.PlainDate(2024, 1, 15)),
+  `Temporal.PlainDate`,
+)
+assert.equal(
+  builtinType(new Temporal.PlainDateTime(2024, 1, 15, 12)),
+  `Temporal.PlainDateTime`,
+)
+assert.equal(
+  builtinType(new Temporal.PlainMonthDay(1, 15)),
+  `Temporal.PlainMonthDay`,
+)
+assert.equal(builtinType(new Temporal.PlainTime(12)), `Temporal.PlainTime`)
+assert.equal(
+  builtinType(new Temporal.PlainYearMonth(2024, 1)),
+  `Temporal.PlainYearMonth`,
+)
+assert.equal(
+  builtinType(new Temporal.ZonedDateTime(0n, `UTC`)),
+  `Temporal.ZonedDateTime`,
+)
 assert.equal(builtinType({}), `Object`)
 ```
 

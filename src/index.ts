@@ -13,7 +13,9 @@ export type BuiltinType =
   // Primitive wrappers
   | `Boolean`
   | `Number`
+  | `BigInt`
   | `String`
+  | `Symbol`
   // Collections
   | `Array`
   | `Map`
@@ -97,7 +99,9 @@ const INTERNAL_SLOT_STATIC_NAMES: [BuiltinType, string][] = [
 const INTERNAL_SLOT_PROTOTYPE_NAMES: [BuiltinType, string, any[]?][] = [
   [`Boolean`, `valueOf`],
   [`Number`, `valueOf`],
+  [`BigInt`, `valueOf`],
   [`String`, `valueOf`],
+  [`Symbol`, `valueOf`],
   [`Map`, `has`],
   [`Set`, `has`],
   [`WeakMap`, `has`],

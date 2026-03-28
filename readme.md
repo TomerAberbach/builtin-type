@@ -30,7 +30,7 @@
 - **Robust:** Works
   [cross-realm](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_realms)
 - **Secure:** Resilient to spoofing
-- **Tiny:** One 0.76 kB gzipped package instead of
+- **Tiny:** One 0.77 kB gzipped package instead of
   [`which-builtin-type`'s 10.5 kB gzipped total size](https://bundlejs.com/?q=which-builtin-type%401.2.1)
   with [50 dependencies](https://npmgraph.js.org/?q=which-builtin-type#zoom=w)
 
@@ -67,7 +67,9 @@ assert.equal(builtinType(`foo`), `string`)
 assert.equal(builtinType(Symbol()), `symbol`)
 assert.equal(builtinType(new Boolean(false)), `Boolean`)
 assert.equal(builtinType(new Number(42)), `Number`)
+assert.equal(builtinType(Object(42n)), `BigInt`)
 assert.equal(builtinType(new String(`foo`)), `String`)
+assert.equal(builtinType(Object(Symbol())), `Symbol`)
 assert.equal(builtinType([]), `Array`)
 assert.equal(builtinType(new Map()), `Map`)
 assert.equal(builtinType(new Set()), `Set`)

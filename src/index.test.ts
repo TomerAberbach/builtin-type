@@ -59,7 +59,18 @@ const cases: Record<BuiltinType, () => unknown[]> = {
     new Number(Number.NaN),
     new Number(3.14),
   ],
+  BigInt: (): unknown[] => [
+    Object(0n),
+    Object(42n),
+    Object(23_423_423_498_234n),
+  ],
   String: () => [new String(``), new String(`abc`)],
+  Symbol: (): unknown[] => [
+    // eslint-disable-next-line symbol-description
+    Object(Symbol()),
+    Object(Symbol(`blah`)),
+    Object(Symbol.for(`wow`)),
+  ],
   Array: () => [[], [42]],
   Map: () => [
     new Map(),
@@ -229,6 +240,7 @@ const EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES = new Map<string, string>([
 
   // `which-builtin-type` seems to erroneously use the `Symbol.toStringTag`
   // value sometimes.
+  [`symbol`, `lies!`],
   [`url`, `lies!`],
   [`urlsearchparams`, `lies!`],
   [`arraybuffer`, `lies!`],

@@ -51,20 +51,20 @@
   },
   "prettier": "@tomer/prettier-config",
   "devDependencies": {
-    "@fast-check/vitest": "^0.3.0",
+    "@fast-check/vitest": "^0.4.0",
     "@js-temporal/polyfill": "^0.5.1",
     "@rollup/plugin-terser": "^1.0.0",
     "@tomer/eslint-config": "^4.6.1",
     "@tomer/prettier-config": "^4.0.0",
-    "@vitest/coverage-v8": "^4.1.0",
-    "eslint": "^9.39.2",
+    "@vitest/coverage-v8": "^4.1.2",
+    "eslint": "^10.2.0",
     "jsdom": "^29.0.1",
     "magic-string": "^0.30.21",
     "prettier": "^3.8.1",
     "publint": "^0.3.18",
-    "tsdown": "^0.21.4",
+    "tsdown": "^0.21.7",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.0",
+    "vitest": "^4.1.2",
     "which-builtin-type": "^1.2.1"
   }
 }

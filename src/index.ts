@@ -27,6 +27,7 @@ export type BuiltinType =
   | `GeneratorFunction`
   | `AsyncFunction`
   | `AsyncGeneratorFunction`
+  | `Arguments`
   // Other built-ins
   | `Promise`
   | `Date`
@@ -192,5 +193,11 @@ if (typedArrayToStringTag) {
     value => typedArrayToStringTag.call(value) as BuiltinType | undefined,
   )
 }
+TYPE_TAG_FUNCTIONS.push(value =>
+  !Object.hasOwn(value, Symbol.toStringTag) &&
+  Object.prototype.toString.call(value) == `[object Arguments]`
+    ? `Arguments`
+    : undefined,
+)
 
 export default builtinType

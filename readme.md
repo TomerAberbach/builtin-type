@@ -30,7 +30,7 @@
 - **Robust:** Works
   [cross-realm](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_realms)
 - **Secure:** Resilient to spoofing
-- **Tiny:** One 0.77 kB gzipped package instead of
+- **Tiny:** One 0.81 kB gzipped package instead of
   [`which-builtin-type`'s 10.5 kB gzipped total size](https://bundlejs.com/?q=which-builtin-type%401.2.1)
   with [50 dependencies](https://npmgraph.js.org/?q=which-builtin-type#zoom=w)
 
@@ -52,7 +52,7 @@ $ npm i builtin-type
 
 ## Usage
 
-<!-- eslint-disable require-unicode-regexp, prefer-regex-literals, no-new-wrappers, unicorn/new-for-builtins, symbol-description -->
+<!-- eslint-disable require-unicode-regexp, prefer-regex-literals, no-new-wrappers, unicorn/new-for-builtins, symbol-description, prefer-rest-params -->
 
 ```js
 import assert from 'node:assert'
@@ -90,6 +90,14 @@ assert.equal(
 assert.equal(
   builtinType(async function* () {}),
   `AsyncGeneratorFunction`,
+)
+assert.equal(
+  builtinType(
+    (function () {
+      return arguments
+    })(),
+  ),
+  `Arguments`,
 )
 assert.equal(builtinType(Promise.resolve()), `Promise`)
 assert.equal(builtinType(new Date()), `Date`)

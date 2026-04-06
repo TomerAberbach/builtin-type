@@ -103,6 +103,16 @@ const cases: Record<BuiltinType, () => unknown[]> = {
     // eslint-disable-next-line func-names
     async function* func() {},
   ],
+  Arguments: () => [
+    (function () {
+      // eslint-disable-next-line prefer-rest-params
+      return arguments
+    })(),
+    (function (..._: unknown[]) {
+      // eslint-disable-next-line prefer-rest-params
+      return arguments
+    })(1, 2, 3),
+  ],
   Promise: () => [Promise.resolve(42), new Promise(() => {})],
   Date: () => [new Date(), new Date(Number.NaN)],
   RegExp: () => [
@@ -195,7 +205,9 @@ const expandedCases = Object.entries(cases).map(
       type as BuiltinType,
       [
         ...values(),
-        ...withToStringTag(values()),
+        // We can't detect than an object is an `Arguments` when it's using
+        // `Symbol.toStringTag`.
+        ...(type === `Arguments` ? [] : withToStringTag(values())),
         ...withObjectPrototype(values()),
         ...fromDifferentRealm(values),
       ],
@@ -237,6 +249,9 @@ it.each<readonly [unknown, BuiltinType]>(
 const EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES = new Map<string, string>([
   // `which-builtin-type` seems to mishandle async generator functions.
   [`asyncgeneratorfunction`, `function`],
+
+  // `which-builtin-type` doesn't detect `Arguments` objects.
+  [`arguments`, `object`],
 
   // `which-builtin-type` seems to erroneously use the `Symbol.toStringTag`
   // value sometimes.

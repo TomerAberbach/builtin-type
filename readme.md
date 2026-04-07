@@ -30,7 +30,7 @@
 - **Robust:** Works
   [cross-realm](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_realms)
 - **Secure:** Resilient to spoofing
-- **Tiny:** One 0.89 kB gzipped package instead of
+- **Tiny:** One 0.92 kB gzipped package instead of
   [`which-builtin-type`'s 10.5 kB gzipped total size](https://bundlejs.com/?q=which-builtin-type%401.2.1)
   with [50 dependencies](https://npmgraph.js.org/?q=which-builtin-type#zoom=w)
 
@@ -156,20 +156,17 @@ assert.equal(builtinType({}), `Object`)
 
 ## Benchmarks
 
-`builtin-type` is at least as fast as
-[`which-builtin-type`](https://www.npmjs.com/package/which-builtin-type). It may
-be slightly faster, but that could just be noise in the benchmarks.
+`builtin-type` is around 1.45x faster than
+[`which-builtin-type`](https://www.npmjs.com/package/which-builtin-type) for a
+diverse set of 500 values.
 
 Here's an example run of [the benchmark](./src/index.bench.ts):
 
 ```
- ✓ src/index.bench.ts 3333ms
+ ✓ src/index.bench.ts 3069ms
      name                   hz      min      max     mean      p75      p99     p995     p999     rme  samples
-   · whichBuiltinType  66.9824  14.6727  15.4056  14.9293  15.0297  15.4056  15.4056  15.4056  ±0.43%       34
-   · builtinType       71.4251  13.7500  14.6090  14.0007  14.0046  14.6090  14.6090  14.6090  ±0.41%       36
-
-  builtinType - src/index.bench.ts
-    1.07x faster than whichBuiltinType
+   · whichBuiltinType  66.2924  14.9159  15.6526  15.0847  15.1303  15.6526  15.6526  15.6526  ±0.39%       34
+   · builtinType       96.9832   9.9813  10.8347  10.3111  10.3934  10.8347  10.8347  10.8347  ±0.60%       49
 ```
 
 ## Contributing

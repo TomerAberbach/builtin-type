@@ -144,7 +144,14 @@ const INTERNAL_SLOT_PROTOTYPE_NAMES: [BuiltinType, string, any[]?][] = [
   [`Temporal.PlainMonthDay`, `monthCode`],
   [`Temporal.Duration`, `sign`],
 ]
-const TO_STRING_TYPE_NAMES = new Set<BuiltinType>([`Error`, `Arguments`])
+const TO_STRING_TYPE_NAMES = new Set<BuiltinType>([
+  ...INTERNAL_SLOT_PROTOTYPE_NAMES.map(([type]) => type),
+  // Not all engine versions have `Error.isError`.
+  `Error`,
+  // The only way to check for this class is via `Object.prototype.toString`.
+  `Arguments`,
+])
+
 const BUILTIN_ERROR_SUBCLASS_NAMES = new Set<string | undefined>([
   `EvalError`,
   `RangeError`,
@@ -157,7 +164,12 @@ const BUILTIN_ERROR_SUBCLASS_NAMES = new Set<string | undefined>([
 
 type BuiltinTypeFunction = (value: object) => BuiltinType | `` | undefined
 
+const typedArrayToStringTag = Object.getOwnPropertyDescriptor(
+  Object.getPrototypeOf(Uint8Array.prototype),
+  Symbol.toStringTag,
+)?.get
 const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
+  // Check builtin type predicates first since they're accurate and fast.
   ...INTERNAL_SLOT_PREDICATE_NAMES.flatMap<BuiltinTypeFunction>(type => {
     const func = (
       globalThis[type as keyof typeof globalThis] as
@@ -166,6 +178,22 @@ const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
     )?.[`is${type}`]
     return func ? value => (func(value) ? type : ``) : []
   }),
+  // Then check builtin type string because it's fast and usually not spoofed.
+  value => {
+    const type =
+      !Object.hasOwn(value, Symbol.toStringTag) &&
+      Object.prototype.toString.call(value).slice(8, -1)
+    return TO_STRING_TYPE_NAMES.has(type as BuiltinType)
+      ? (type as BuiltinType)
+      : ``
+  },
+  ...(typedArrayToStringTag
+    ? [
+        (value: object) =>
+          typedArrayToStringTag.call(value) as BuiltinType | undefined,
+      ]
+    : []),
+  // Then check using internal slots, which are slow.
   ...INTERNAL_SLOT_PROTOTYPE_NAMES.flatMap<BuiltinTypeFunction>(
     ([type, name, args = []]) => {
       let prototype: object | undefined | null = (
@@ -219,14 +247,5 @@ const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
       : ``
   },
 ]
-const typedArrayToStringTag = Object.getOwnPropertyDescriptor(
-  Object.getPrototypeOf(Int8Array.prototype),
-  Symbol.toStringTag,
-)?.get
-if (typedArrayToStringTag) {
-  TYPE_TAG_FUNCTIONS.push(
-    value => typedArrayToStringTag.call(value) as BuiltinType | undefined,
-  )
-}
 
 export default builtinType

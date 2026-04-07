@@ -53,6 +53,15 @@ export type BuiltinType =
   | `Float32Array`
   | `Float64Array`
   | `DataView`
+  // Errors
+  | `Error`
+  | `EvalError`
+  | `RangeError`
+  | `ReferenceError`
+  | `SyntaxError`
+  | `TypeError`
+  | `URIError`
+  | `AggregateError`
   // Temporal
   | `Temporal.Duration`
   | `Temporal.Instant`
@@ -126,6 +135,15 @@ const INTERNAL_SLOT_PROTOTYPE_NAMES: [BuiltinType, string, any[]?][] = [
   [`Temporal.PlainMonthDay`, `monthCode`],
   [`Temporal.Duration`, `sign`],
 ]
+const BUILTIN_ERROR_SUBCLASS_NAMES = new Set<string>([
+  `EvalError`,
+  `RangeError`,
+  `ReferenceError`,
+  `SyntaxError`,
+  `TypeError`,
+  `URIError`,
+  `AggregateError`,
+])
 
 type BuiltinTypeFunction = (value: object) => BuiltinType | undefined
 
@@ -193,11 +211,27 @@ if (typedArrayToStringTag) {
     value => typedArrayToStringTag.call(value) as BuiltinType | undefined,
   )
 }
-TYPE_TAG_FUNCTIONS.push(value =>
-  !Object.hasOwn(value, Symbol.toStringTag) &&
-  Object.prototype.toString.call(value) == `[object Arguments]`
-    ? `Arguments`
-    : undefined,
-)
+TYPE_TAG_FUNCTIONS.push(value => {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!(Error.isError?.(value) ?? toStringType(value) == `Error`)) {
+    return undefined
+  }
+  const prototype = Object.getPrototypeOf(value) as { name?: string } | null
+  if (prototype === null) {
+    return `Error`
+  }
+  return BUILTIN_ERROR_SUBCLASS_NAMES.has(prototype.name!)
+    ? (prototype.name as BuiltinType)
+    : `Error`
+})
+TYPE_TAG_FUNCTIONS.push(value => {
+  const type = toStringType(value)
+  return type == `Arguments` ? type : undefined
+})
+
+const toStringType = (value: object) =>
+  Object.hasOwn(value, Symbol.toStringTag)
+    ? ``
+    : Object.prototype.toString.call(value).slice(8, -1)
 
 export default builtinType

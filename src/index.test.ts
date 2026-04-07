@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/error-message */
 /* eslint-disable unicorn/new-for-builtins */
 /* eslint-disable no-new-wrappers */
 /* eslint-disable require-unicode-regexp */
@@ -162,6 +163,17 @@ const cases: Record<BuiltinType, () => unknown[]> = {
     new DataView(new ArrayBuffer()),
     new DataView(new ArrayBuffer(10)),
   ],
+  Error: () => [new Error(), new Error(`message`)],
+  EvalError: () => [new EvalError(), new EvalError(`message`)],
+  RangeError: () => [new RangeError(), new RangeError(`message`)],
+  ReferenceError: () => [new ReferenceError(), new ReferenceError(`message`)],
+  SyntaxError: () => [new SyntaxError(), new SyntaxError(`message`)],
+  TypeError: () => [new TypeError(), new TypeError(`message`)],
+  URIError: () => [new URIError(), new URIError(`message`)],
+  AggregateError: () => [
+    new AggregateError([]),
+    new AggregateError([new Error()], `message`),
+  ],
   'Temporal.Duration': () => [
     new Temporal.Duration(),
     new Temporal.Duration(1, 2, 3),
@@ -199,15 +211,31 @@ const cases: Record<BuiltinType, () => unknown[]> = {
   Object: (): unknown[] => [{}, Object.create(null)],
 }
 
+const SPOOFABLE_TYPES = new Set<BuiltinType>([
+  `Arguments`,
+  ...((Error.isError as object | undefined)
+    ? []
+    : ([
+        `Error`,
+        `EvalError`,
+        `RangeError`,
+        `ReferenceError`,
+        `SyntaxError`,
+        `TypeError`,
+        `URIError`,
+        `AggregateError`,
+      ] satisfies BuiltinType[])),
+])
+
 const expandedCases = Object.entries(cases).map(
   ([type, values]) =>
     [
       type as BuiltinType,
       [
         ...values(),
-        // We can't detect than an object is an `Arguments` when it's using
-        // `Symbol.toStringTag`.
-        ...(type === `Arguments` ? [] : withToStringTag(values())),
+        ...(SPOOFABLE_TYPES.has(type as BuiltinType)
+          ? []
+          : withToStringTag(values())),
         ...withObjectPrototype(values()),
         ...fromDifferentRealm(values),
       ],
@@ -232,8 +260,9 @@ it.each<readonly [unknown, BuiltinType]>(
   const canonicalizedActualType = actualType.toLowerCase()
   const canonicalizedThirdPartyType = thirdPartyType.toLowerCase()
   if (
-    EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES.get(canonicalizedActualType) ===
-    canonicalizedThirdPartyType
+    EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES.has(
+      `${canonicalizedActualType}:${canonicalizedThirdPartyType}`,
+    )
   ) {
     // This is a known and expected mismatch.
     return
@@ -244,35 +273,53 @@ it.each<readonly [unknown, BuiltinType]>(
 
 /**
  * Known scenarios where `which-builtin-type` differs because it's wrong or
- * because we have a different contract.
+ * because we have a different contract. Each entry is `actual:thirdParty`.
  */
-const EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES = new Map<string, string>([
+const EXPECTED_WHICH_BUILTIN_TYPE_MISMATCHES = new Set<string>([
   // `which-builtin-type` seems to mishandle async generator functions.
-  [`asyncgeneratorfunction`, `function`],
+  `asyncgeneratorfunction:function`,
 
   // `which-builtin-type` doesn't detect `Arguments` objects.
-  [`arguments`, `object`],
+  `arguments:object`,
 
   // `which-builtin-type` seems to erroneously use the `Symbol.toStringTag`
   // value sometimes.
-  [`symbol`, `lies!`],
-  [`url`, `lies!`],
-  [`urlsearchparams`, `lies!`],
-  [`arraybuffer`, `lies!`],
-  [`sharedarraybuffer`, `lies!`],
-  [`dataview`, `lies!`],
-  [`temporal.duration`, `lies!`],
-  [`temporal.instant`, `lies!`],
-  [`temporal.plaindate`, `lies!`],
-  [`temporal.plaindatetime`, `lies!`],
-  [`temporal.plainmonthday`, `lies!`],
-  [`temporal.plaintime`, `lies!`],
-  [`temporal.plainyearmonth`, `lies!`],
-  [`temporal.zoneddatetime`, `lies!`],
-  [`object`, `lies!`],
+  `symbol:lies!`,
+  `url:lies!`,
+  `urlsearchparams:lies!`,
+  `arraybuffer:lies!`,
+  `sharedarraybuffer:lies!`,
+  `dataview:lies!`,
+  `temporal.duration:lies!`,
+  `temporal.instant:lies!`,
+  `temporal.plaindate:lies!`,
+  `temporal.plaindatetime:lies!`,
+  `temporal.plainmonthday:lies!`,
+  `temporal.plaintime:lies!`,
+  `temporal.plainyearmonth:lies!`,
+  `temporal.zoneddatetime:lies!`,
+  `object:lies!`,
 
   // `which-builtin-type` seems to mishandle `Buffer`.
-  [`buffer`, `uint8array`],
+  `buffer:uint8array`,
+
+  // `which-builtin-type` doesn't detect Error types robustly.
+  `error:lies!`,
+  `error:object`,
+  `evalerror:lies!`,
+  `evalerror:object`,
+  `rangeerror:lies!`,
+  `rangeerror:object`,
+  `referenceerror:lies!`,
+  `referenceerror:object`,
+  `syntaxerror:lies!`,
+  `syntaxerror:object`,
+  `typeerror:lies!`,
+  `typeerror:object`,
+  `urierror:lies!`,
+  `urierror:object`,
+  `aggregateerror:lies!`,
+  `aggregateerror:object`,
 ])
 
 const anythingArb = fc.anything({

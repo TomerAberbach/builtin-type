@@ -83,9 +83,17 @@ const builtinType = (value: unknown): BuiltinType => {
   if (type == `object`) {
     for (const builtinType of TYPE_TAG_FUNCTIONS) {
       const type = builtinType(value as object)
-      if (type) {
-        return type
+      if (!type) {
+        continue
       }
+      if (type == `Error`) {
+        const name = (Object.getPrototypeOf(value) as { name?: string } | null)
+          ?.name
+        if (BUILTIN_ERROR_SUBCLASS_NAMES.has(name)) {
+          return name as BuiltinType
+        }
+      }
+      return type
     }
 
     // It must be a plain object or custom class.
@@ -102,9 +110,10 @@ const builtinType = (value: unknown): BuiltinType => {
   }
 }
 
-const INTERNAL_SLOT_STATIC_NAMES: [BuiltinType, string][] = [
-  [`Array`, `isArray`],
-  [`Buffer`, `isBuffer`],
+const INTERNAL_SLOT_PREDICATE_NAMES: BuiltinType[] = [
+  `Array`,
+  `Buffer`,
+  `Error`,
 ]
 const INTERNAL_SLOT_PROTOTYPE_NAMES: [BuiltinType, string, any[]?][] = [
   [`Boolean`, `valueOf`],
@@ -135,7 +144,8 @@ const INTERNAL_SLOT_PROTOTYPE_NAMES: [BuiltinType, string, any[]?][] = [
   [`Temporal.PlainMonthDay`, `monthCode`],
   [`Temporal.Duration`, `sign`],
 ]
-const BUILTIN_ERROR_SUBCLASS_NAMES = new Set<string>([
+const TO_STRING_TYPE_NAMES = new Set<BuiltinType>([`Error`, `Arguments`])
+const BUILTIN_ERROR_SUBCLASS_NAMES = new Set<string | undefined>([
   `EvalError`,
   `RangeError`,
   `ReferenceError`,
@@ -145,18 +155,16 @@ const BUILTIN_ERROR_SUBCLASS_NAMES = new Set<string>([
   `AggregateError`,
 ])
 
-type BuiltinTypeFunction = (value: object) => BuiltinType | undefined
+type BuiltinTypeFunction = (value: object) => BuiltinType | `` | undefined
 
 const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
-  ...INTERNAL_SLOT_STATIC_NAMES.flatMap<BuiltinTypeFunction>(([type, name]) => {
-    const Class = globalThis[type as keyof typeof globalThis] as
-      | Record<string, (value: unknown) => boolean>
-      | undefined
-    if (!Class) {
-      return []
-    }
-    const func = Class[name]!
-    return value => (func(value) ? type : undefined)
+  ...INTERNAL_SLOT_PREDICATE_NAMES.flatMap<BuiltinTypeFunction>(type => {
+    const func = (
+      globalThis[type as keyof typeof globalThis] as
+        | Record<string, (value: unknown) => boolean>
+        | undefined
+    )?.[`is${type}`]
+    return func ? value => (func(value) ? type : ``) : []
   }),
   ...INTERNAL_SLOT_PROTOTYPE_NAMES.flatMap<BuiltinTypeFunction>(
     ([type, name, args = []]) => {
@@ -173,13 +181,14 @@ const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
         return []
       }
       let descriptor: PropertyDescriptor | undefined
-      do {
-        descriptor = Object.getOwnPropertyDescriptor(prototype, name)
-        if (descriptor) {
-          break
-        }
+      for (
+        ;
+        prototype &&
+        !(descriptor = Object.getOwnPropertyDescriptor(prototype, name));
         prototype = Object.getPrototypeOf(prototype) as object | null
-      } while (prototype)
+      ) {
+        //
+      }
       if (!descriptor) {
         return []
       }
@@ -192,18 +201,26 @@ const TYPE_TAG_FUNCTIONS: BuiltinTypeFunction[] = [
         // Each function above will do one of the following when applied to a
         // value not of the proper type:
         // 1. Throw
-        // 2. Return `null` or `undefined
+        // 2. Return `null` or `undefined`
         try {
-          return func.apply(value, args) == null ? undefined : type
+          return func.apply(value, args) == null ? `` : type
         } catch {
           return undefined
         }
       }
     },
   ),
+  value => {
+    const type =
+      !(Symbol.toStringTag in value) &&
+      Object.prototype.toString.call(value).slice(8, -1)
+    return TO_STRING_TYPE_NAMES.has(type as BuiltinType)
+      ? (type as BuiltinType)
+      : ``
+  },
 ]
 const typedArrayToStringTag = Object.getOwnPropertyDescriptor(
-  Object.getPrototypeOf(Uint8Array.prototype),
+  Object.getPrototypeOf(Int8Array.prototype),
   Symbol.toStringTag,
 )?.get
 if (typedArrayToStringTag) {
@@ -211,27 +228,5 @@ if (typedArrayToStringTag) {
     value => typedArrayToStringTag.call(value) as BuiltinType | undefined,
   )
 }
-TYPE_TAG_FUNCTIONS.push(value => {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!(Error.isError?.(value) ?? toStringType(value) == `Error`)) {
-    return undefined
-  }
-  const prototype = Object.getPrototypeOf(value) as { name?: string } | null
-  if (prototype === null) {
-    return `Error`
-  }
-  return BUILTIN_ERROR_SUBCLASS_NAMES.has(prototype.name!)
-    ? (prototype.name as BuiltinType)
-    : `Error`
-})
-TYPE_TAG_FUNCTIONS.push(value => {
-  const type = toStringType(value)
-  return type == `Arguments` ? type : undefined
-})
-
-const toStringType = (value: object) =>
-  Object.hasOwn(value, Symbol.toStringTag)
-    ? ``
-    : Object.prototype.toString.call(value).slice(8, -1)
 
 export default builtinType
